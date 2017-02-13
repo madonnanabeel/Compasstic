@@ -1,0 +1,60 @@
+*{
+    -webkit-user-select: none;   /* Chrome/Safari/Opera */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    user-select: none;           /* Non-prefixed version, currently not supported by any browser */
+}
+body{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    overflow-y: hidden;
+}
+body h1{
+    background-color: rgb(230, 230, 230);
+    margin: 0;
+}
+#tools, #result{
+    float: left;
+    height: 100%;
+    background: radial-gradient(ellipse at center, rgb(230, 230, 230) 0%, rgb(155, 155, 155) 100%);
+}
+#tools{
+    width: 25%;
+    background: linear-gradient(to bottom, rgb(230, 230, 230) 0%, rgb(155, 155, 155) 100%);
+}
+#result{
+    width: 75%;
+    overflow: scroll;
+}
+#tools .tool{
+    display: block;
+    width: 95%;
+    margin-left: 2.5%;
+    margin-top: 15px;
+    text-align: center;
+}
+#tools .wideBtn{
+    width: 100%;
+    height: 40px;
+}
+#tools .smallBtn, #tools input{
+    width: 45%;
+    height: 40px;
+}
+#tools input{
+    border: 0;
+}
+
+#result p{
+    background-color: #cdcdcd;
+}
+#result p:last-child{
+    margin-bottom: 100px;
+}
+
+body textarea{
+    height: 48%;
+    width: 50%;
+}
