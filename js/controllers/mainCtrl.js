@@ -30,16 +30,31 @@ angular.module('compasstic.controllers').controller('mainCtrl',
 
             };
 
+          var commentsAfter = "";
+
             $scope.getComments = function () {
-                //daily news, T vs H 7976226799_10154668352051800
-                //T and nuc 228735667216_10154233142332217
-                FB.api('/7976226799_10154668352051800', {
-                    fields: 'comments.limit('+$scope.commentsLimit+')'
-                }, function(response) {
-                    $scope.comments = response.comments.data;
+
+                FB.api('/7976226799_10155066114886800', {
+                    fields: 'comments.limit(' + $scope.commentsLimit + ')'+ commentsAfter
+                }, function (response) {
+
+                    response =  response.comments;
+
+                    $scope.comments= $scope.comments.concat(response.data);
+
                     $scope.$apply();
-                    console.info("Got "+$scope.comments.length+" comment");
+
+                    if (response.paging.next) {
+                        commentsAfter = '.after('+response.paging.cursors.after+')';
+                        $scope.getComments();
+                    }
+                    else{
+                        //console.log($scope.comments);
+                        console.info("Got " + $scope.comments.length + " comment");
+                    }
+
                 });
+
             };
 
             $scope.setQuery = function (query) {
