@@ -41,7 +41,7 @@ angular.module('compasstic.controllers').controller('mainCtrl',
             };
             $scope.setFeeling=function (value,index) {
                 $scope.comments[index].sentiment = value.toString();
-                console.info('changed to ' +value.toString()+'index = '+index);
+                //console.info('changed to ' +value.toString()+'index = '+index);
 
             }
 
