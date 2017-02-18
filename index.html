@@ -42,7 +42,20 @@
         <p ng-repeat="comment in comments | filter: query">
             {{$index+1}}- {{comment.message}}<br>
             pos: {{comment.pos||'-'}}, neg: {{comment.neg||'-'}}, Overall: <b>{{comment.sentiment||'-'}}</b>
+            <select ng-model="feelings" ng-change="setFeeling(feelings,$index)" >
+                <option value="" disabled selected >Select Feeling</option>
+                <option value="fear">Fear</option>
+                <option value="disgust">Disgust</option>
+                <option value="anger">Anger</option>
+                <option value="happiness">Happiness</option>
+                <option value="sadness">Sadness</option>
+                <option value="surprise">Surprise</option>
+                <
+            </select>
+            <button ng-click="printComment($index)">Print</button>
+
         </p>
+
     </div>
 
     </body>
