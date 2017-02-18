@@ -26,8 +26,6 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                     console.log("Logged in FB.");
                 }, {scope: 'publish_actions'});
 
-
-
             };
 
             $scope.getComments = function () {
@@ -41,7 +39,15 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                     console.info("Got "+$scope.comments.length+" comment");
                 });
             };
+            $scope.setFeeling=function (value,index) {
+                $scope.comments[index].sentiment = value.toString();
+                console.info('changed to ' +value.toString()+'index = '+index);
 
+            }
+
+            $scope.printComment = function (index) {
+                console.info('Comment : ' + $scope.comments[index].message + ' Class : ' + $scope.comments[index].sentiment);
+            }
             $scope.setQuery = function (query) {
                 query = query.toLowerCase();
 
