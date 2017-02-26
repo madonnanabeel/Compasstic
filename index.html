@@ -37,6 +37,12 @@
             </p>
         </div>
 
+        <hr>
+
+        <div class="tool" style="">
+            <button class="wideBtn" ng-click="startClassing()">Start Classing</button>
+        </div>
+
     </div>
     <div id="result">
         <p ng-repeat="comment in comments | filter: query">
@@ -50,9 +56,9 @@
                 <option value="happiness">Happiness</option>
                 <option value="sadness">Sadness</option>
                 <option value="surprise">Surprise</option>
-                <
+                <option value="neutral">Neutral</option>
             </select>
-            <button ng-click="printComment($index)">Print</button>
+            <button ng-click="postOpinion($index)">Post</button>
 
         </p>
 

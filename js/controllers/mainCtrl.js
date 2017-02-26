@@ -1,16 +1,19 @@
 angular.module('compasstic.controllers').controller('mainCtrl',
-    ['$scope', '$window',
-        function ($scope, $window) {
+    ['$scope', '$window', '$webServicesFactory',
+        function ($scope, $window, $webServicesFactory) {
             $scope.find = function(search){
                 console.info(compassticSentiWord[search]);
             };
-            $scope.commentsLimit = 200;
+            $scope.commentsLimit = 400;
             $scope.overallSentiment = {
                 posCount:0,
                 negCount: 0,
                 total: $scope.commentsLimit
             };
             $scope.comments = [];
+
+            $scope.firebaseCommentsURL = "https://compasstic-c2156.firebaseio.com/comments.json";
+            $scope.firebaseOpinionsURL = "https://compasstic-c2156.firebaseio.com/opinions.json";
 
             $window.fbAsyncInit = function() {
                 FB.init({
@@ -28,18 +31,24 @@ angular.module('compasstic.controllers').controller('mainCtrl',
 
             };
 
-          var commentsAfter = "";
+            var commentsAfter = "";
 
+            $scope.fix = function (comment) {
+                console.log(comment);
+            };
             $scope.getComments = function () {
+                //daily news, T vs H 7976226799_10154668352051800
+                //T and nuc 228735667216_10154233142332217
+                // 7976226799_10155066114886800
+                //https://www.facebook.com/thedailyshow/videos/10155066114886800/
+                $scope.urlID = "7976226799_10155066114886800";
 
-                FB.api('/7976226799_10155066114886800', {
+                FB.api("/"+$scope.urlID, {
                     fields: 'comments.limit(' + $scope.commentsLimit + ')'+ commentsAfter
                 }, function (response) {
 
                     response =  response.comments;
-
                     $scope.comments= $scope.comments.concat(response.data);
-
                     $scope.$apply();
 
                     if (response.paging.next) {
@@ -48,21 +57,25 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                     }
                     else{
                         //console.log($scope.comments);
+                        $scope.fix($scope.comments[0]);
+                        //$scope.pushCommentsToDB($scope.urlID, $scope.comments);
                         console.info("Got " + $scope.comments.length + " comment");
                     }
 
                 });
 
             };
+
+
             $scope.setFeeling=function (value,index) {
                 $scope.comments[index].sentiment = value.toString();
                 //console.info('changed to ' +value.toString()+'index = '+index);
 
-            }
-
+            };
             $scope.printComment = function (index) {
                 console.info('Comment : ' + $scope.comments[index].message + ' Class : ' + $scope.comments[index].sentiment);
-            }
+            };
+            /////////////////////////////////////////////////
             $scope.setQuery = function (query) {
                 query = query.toLowerCase();
 
@@ -80,7 +93,6 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                 $scope.query = "";
                 console.info('Filtered by "'+query+'", result: '+$scope.comments.length+' comment');
             };
-
             $scope.getSentiment = function () {
                 $scope.overallSentiment = {
                     posCount:0,
@@ -121,8 +133,72 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                 console.info("Got sentiment:");
                 console.info($scope.overallSentiment);
             };
+            ////////////////////////////////////////////////
+            ////////////Classing////////////////////////////
+            $scope.startClassing = function () {
+                $scope.comments = [];
+
+                $webServicesFactory.get(
+                    $scope.firebaseCommentsURL,
+                    {},
+                    {orderBy: '"$key"', limitToFirst: 10}
+                ).then(
+                    function (response) {
+                        for(r in response){
+                            response[r].id = r;
+                            $scope.comments.push(response[r]);
+                        }
+                    }
+                );
+
+            };
+            $scope.postOpinion = function (index) {
+                var data = {};
+                data[$scope.comments[index].id] = {
+                    "message": $scope.comments[index].message,
+                    "sentiment": $scope.comments[index].sentiment
+                };
+                $webServicesFactory.patch(
+                    $scope.firebaseOpinionsURL,
+                    {},
+                    data
+                ).then(
+                    function (response) {
+                        console.info(response);
 
 
+                        $webServicesFactory.delete(
+                            "https://compasstic-c2156.firebaseio.com/comments/"+$scope.comments[index].id+".json"
+                        ).then(
+                            function (response) {
+                                console.info(response);
+                                $scope.comments.splice(index, 1);
+
+                            }
+                        );
+
+                    }
+                );
+            };
+            
+            $scope.pushCommentsToDB = function (id, comments) {
+                var data={};
+                //data[id] = comments;
+                for(var i=0; i<comments.length; i+=1){
+                    data[id+"_"+i] = comments[i];
+                }
+                console.info(data);
+                $webServicesFactory.patch(
+                    $scope.firebaseCommentsURL,
+                    {},
+                    data
+                ).then(
+                    function (response) {
+                        console.info(response);
+                    }
+                );
+
+            };
         }
     ]
 );
