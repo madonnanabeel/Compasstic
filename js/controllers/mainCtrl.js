@@ -37,6 +37,7 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                 console.log(comment);
             };
             $scope.getComments = function () {
+                console.info("Getting comments.");
                 //daily news, T vs H 7976226799_10154668352051800
                 //T and nuc 228735667216_10154233142332217
                 // 7976226799_10155066114886800
@@ -56,10 +57,10 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                         $scope.getComments();
                     }
                     else{
-                        //console.log($scope.comments);
-                        $scope.fix($scope.comments[0]);
-                        //$scope.pushCommentsToDB($scope.urlID, $scope.comments);
                         console.info("Got " + $scope.comments.length + " comment");
+                        //console.log($scope.comments);
+                        $scope.buildPostBOW($scope.comments);
+                        //$scope.pushCommentsToDB($scope.urlID, $scope.comments);
                     }
 
                 });
@@ -135,6 +136,23 @@ angular.module('compasstic.controllers').controller('mainCtrl',
             };
             ////////////////////////////////////////////////
             ////////////Classing////////////////////////////
+            //builds Bag Of Words for this post
+            $scope.buildPostBOW = function (comments) {
+                console.info("Setting BOW.");
+                var BOW = {};
+                var commentTxt = "";
+                for(var commentI=0; commentI<comments.length; commentI+=1){
+                    commentTxt = comments[commentI].message.toLowerCase().replace(/[^\w]/gi, ' ').replace(/_/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/ +(?= )/g,'').split(' ');
+                    for(var wordI=0; wordI<commentTxt.length; wordI+=1){
+                        if(!BOW[commentTxt[wordI]])
+                            BOW[commentTxt[wordI]]=0;
+
+                        BOW[commentTxt[wordI]] += 1;
+                    }
+                }
+                console.info(BOW);
+
+            };
             $scope.startClassing = function () {
                 $scope.comments = [];
 
@@ -154,10 +172,26 @@ angular.module('compasstic.controllers').controller('mainCtrl',
             };
             $scope.postOpinion = function (index) {
                 var data = {};
-                data[$scope.comments[index].id] = {
-                    "message": $scope.comments[index].message,
-                    "sentiment": $scope.comments[index].sentiment
+                var message = $scope.comments[index].message.toLowerCase();
+
+                data[$scope.comments[index].id] ={
+                    a:[],
+                    v:[],
+                    n:[],
+                    r:[]
                 };
+                var messageArr = $scope.comments[index].message.toLowerCase().split(' ');
+                for(word in messageArr)
+                    if(compassticSentiWordPOS[messageArr[word]]){
+                        if(!data[$scope.comments[index].id][compassticSentiWordPOS[messageArr[word]][0].pos].contains(messageArr[word]))
+                        data[$scope.comments[index].id][compassticSentiWordPOS[messageArr[word]][0].pos].push(messageArr[word]);
+                    }
+
+                    console.info(data);
+
+
+                data[$scope.comments[index].id].sentiment = $scope.comments[index].sentiment;
+
                 $webServicesFactory.patch(
                     $scope.firebaseOpinionsURL,
                     {},
@@ -180,7 +214,8 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                     }
                 );
             };
-            
+
+
             $scope.pushCommentsToDB = function (id, comments) {
                 var data={};
                 //data[id] = comments;
