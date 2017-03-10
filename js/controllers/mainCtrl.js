@@ -15,6 +15,35 @@ angular.module('compasstic.controllers').controller('mainCtrl',
             $scope.firebaseCommentsURL = "https://compasstic-c2156.firebaseio.com/comments.json";
             $scope.firebaseOpinionsURL = "https://compasstic-c2156.firebaseio.com/opinions.json";
 
+
+            $scope.getChar=function () {
+
+                var c =[];
+                for(var i = 65;i <=90;i++){
+                    for(var y=65;y<=90;y++){
+                        c.push(String.fromCharCode(i)+String.fromCharCode(y));
+                    }
+
+                }
+                console.log(c);
+            };
+            function convertToNumberingScheme(number) {
+
+                var baseChar = ("a").charCodeAt(0),letters  = "";
+
+                do {
+                    number -= 1;
+                    letters = String.fromCharCode(baseChar + (number % 26)) + letters;
+                    number = (number / 26) >> 0;
+
+                } while(number > 0);
+
+                return letters;
+            }
+
+            for (var i =1;i<800;i++)
+                console.log(convertToNumberingScheme(i));
+
             $window.fbAsyncInit = function() {
                 FB.init({
                     appId: '1835491116686888',
@@ -31,10 +60,88 @@ angular.module('compasstic.controllers').controller('mainCtrl',
 
             };
 
+            $webServicesFactory.get("https://graph.facebook.com/oauth/access_token", {},
+                {
+                    client_id:"1835491116686888",
+                    client_secret: "b46eb511f1dbe0d54afc6c93f3056dda",
+                    grant_type:"client_credentials"
+                }
+            ).then(
+                function (response) {
+                    $scope.access_token = response.split('=');
+                    console.info("Got access token");
+                }
+            );
+
             var commentsAfter = "";
 
-            $scope.fix = function (comment) {
-                console.log(comment);
+
+            $scope.getPagesFromFB = function () {
+                $scope.FBPages = {};
+                $scope.numberOfPages = 0;
+                $scope.letters = "abcdefghijklmnopqrstuvwxyz";
+                $scope.letterIndex = 0;
+                function pagesOfLetter(url) {
+                    $webServicesFactory.get(url, {}, {
+                        access_token: $scope.access_token
+                    }).then(
+                        function (response) {
+                            for(var i=0; i<response.data.length; i+=1){
+                                if(!$scope.FBPages[response.data[i].id])
+                                    $scope.numberOfPages += 1;
+                                $scope.FBPages[response.data[i].id] = response.data[i].name;
+                            }
+
+                            if(response.paging.next)
+                                pagesOfLetter(response.paging.next);
+                            else{
+                                console.info("Done "+$scope.letters[$scope.letterIndex]);
+                                if($scope.letterIndex == $scope.letters.length-1){
+                                    console.info("Got "+$scope.numberOfPages+" unique page.");
+                                    $scope.catagorizeFBPages($scope.FBPages);
+                                }
+                                else{
+                                    $scope.letterIndex += 1;
+                                    pagesOfLetter("https://graph.facebook.com/search?q="+$scope.letters[$scope.letterIndex]+"&type=page&limit=400");
+                                }
+                            }
+                        }
+                    );
+                }
+
+                pagesOfLetter("https://graph.facebook.com/search?q="+$scope.letters[$scope.letterIndex]+"&type=page&limit=400");
+
+            };
+            $scope.catagorizeFBPages = function (pages) {
+                $scope.FBPages = {};
+                var cat = "";
+                var count = $scope.numberOfPages;
+                for(var id in pages){
+                    $webServicesFactory.get("https://graph.facebook.com/"+id+"?fields=category", {}, {
+                        access_token: $scope.access_token
+                    }).then(
+                        function (response) {
+                            cat = response.category.replace(/ /g,"_").replace(/\//g, "&" );
+                            if(!$scope.FBPages[cat])
+                                $scope.FBPages[cat] = {};
+
+                            $scope.FBPages[cat][response.id] = pages[response.id];
+                            count--;
+                            if(count == 0){
+                                console.info($scope.FBPages);
+                                $webServicesFactory.patch(
+                                    "https://compasstic-c2156.firebaseio.com/pages.json",
+                                    {},
+                                    $scope.FBPages
+                                ).then(
+                                    function (response) {
+                                        console.info(response);
+                                    }
+                                );
+                            }
+                        }
+                    );
+                }
             };
             $scope.getComments = function () {
                 console.info("Getting comments.");
@@ -43,8 +150,24 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                 // 7976226799_10155066114886800
                 //https://www.facebook.com/thedailyshow/videos/10155066114886800/
                 $scope.urlID = "7976226799_10155066114886800";
+                $scope.getPagesFromFB();
 
-                FB.api("/"+$scope.urlID, {
+                        /*$webServicesFactory.get("https://graph.facebook.com/63811549237?fields=category", {}, {
+                            access_token: response.split('=')[1]
+                        }).then(
+                            function (response) {
+                                console.info(response);
+                            }
+                        );*/
+
+
+                /*FB.api("/page", {
+                    fields: ''
+                }, function (response) {
+                    console.log(response);
+                });*/
+
+                /*FB.api("/"+$scope.urlID, {
                     fields: 'comments.limit(' + $scope.commentsLimit + ')'+ commentsAfter
                 }, function (response) {
 
@@ -63,7 +186,7 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                         //$scope.pushCommentsToDB($scope.urlID, $scope.comments);
                     }
 
-                });
+                });*/
 
             };
 
