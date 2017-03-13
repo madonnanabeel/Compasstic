@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <title> ... </title>
+        <script src="typo/typo.js"></script>
+        <script>
+            var dictionary = new Typo("en_US", false, false, { dictionaryPath: "typo/dictionaries" });
+            var text ="Toq gett suggisted corrections for a misspeled word";
+            var words = text.split(' ');
+            for (var i=0;i<words.length;i++)
+            {
+                var array_of_suggestions = dictionary.suggest(words[i]);
+                console.info(array_of_suggestions);
+            }
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>
