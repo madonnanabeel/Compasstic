@@ -180,6 +180,27 @@ angular.module('compasstic.controllers').controller('mainCtrl',
                         $scope.getComments();
                     }
                     else{
+                     //this is an array of comments
+                        //comment text: $scope.comments[0].message
+                        //$scope.comments
+                        console.log($scope.comments);
+                        for (var i=0;i<$scope.comments.length;i++)
+                        {
+                            var words = $scope.comments[i].message.split(' ');
+                            $scope.comments[i].message = "";
+                            for (var j=0;j<words.length;j++)
+                            {
+                                
+                                var array_of_suggestions = $scope.dictionary.suggest(words[j]);
+                                if (array_of_suggestions.length>0){
+                                    console.info(array_of_suggestions[0]);
+                                    words[j]=array_of_suggestions[0];
+                                    console.info(words[j]);
+                                }
+                                
+                                $scope.comments[i].message +=words[j]+" ";
+                            }
+                            $scope.$apply();
                         console.info("Got " + $scope.comments.length + " comment");
                         //console.log($scope.comments);
                         $scope.buildPostBOW($scope.comments);
